@@ -74,7 +74,10 @@ public:
 
 	i32 execute(CInstruction& instruction)
 	{
-		return m_isaMap.at(instruction.get().op)(instruction.get());
+		i32 ret = m_isaMap.at(instruction.get().opEval.m_op)(instruction.get());
+		static int i = 0;
+		std::cout << "executed " << i++ << "-th instruction" << std::endl;
+		return ret;
 	}
 
 	u32& operator [] (u32 registerIndex)
@@ -88,6 +91,18 @@ public:
 	}
 
 private:
+	u32 zero_extend(u16 imm)
+	{
+		/*	Using dynamic casting to fill the upper 16-bits w/ zeros	*/
+		return (u32)imm;
+	}
+
+	u32 sign_extend(u16 imm)
+	{
+		/*	Using dynamic casting to fill the upper 16-bits w/ value of the MSB of "imm" (i.e.: bit #15)	*/
+		return (u32)(	(i32)( (i16)imm)	);
+	}
+
 	std::array<u32, REGISTER_FILE_SIZE_IN_WORDS> m_regArr;
 	
 	const std::map< u8 /*op*/, std::function<i32(UInstruction)> > m_isaMap{
@@ -96,14 +111,15 @@ private:
 			[&](UInstruction inst)
 			{
 				// R-type: todo
-				return 0;
+				std::cout << "R-type instructions are not supported yet!" << std::endl;
+				return -1;
 			}
 		},
 		{
 			0b000010, // jump 'j'
 			[&](UInstruction inst)
 			{
-				m_regArr[REGISTER_PC] = (m_regArr[REGISTER_PC] & (0b1111 << 28)) | (inst.jTypeInst.m_target << 2);
+				m_regArr[REGISTER_PC] = (m_regArr[REGISTER_PC] & (0b1111 << 28)) | ((u32)inst.jTypeInst.m_target << 2);
 				m_regArr[REGISTER_PC] -= sizeof(u32);
 				return 0;
 			}
@@ -118,10 +134,67 @@ private:
 			}
 		},
 		{
-			0b001001, // add immediate unsigned 'addiu'
+			0b001000, // add immediate with ovf trap 'addi'
 			[&](UInstruction inst)
 			{
-				m_regArr[inst.iTypeInst.m_rt] = m_regArr[inst.iTypeInst.m_rs] + inst.iTypeInst.m_imm;
+				m_regArr[inst.iTypeInst.m_rt] = (i32)m_regArr[inst.iTypeInst.m_rs] + (i32)sign_extend(inst.iTypeInst.m_imm);
+				// todo: check ovf and update ovf trap accordingly
+				return 0;
+			}
+		},
+		{
+			0b001001, // add immediate unsigned without ovf trap 'addiu'
+			[&](UInstruction inst)
+			{
+				m_regArr[inst.iTypeInst.m_rt] = m_regArr[inst.iTypeInst.m_rs] + sign_extend(inst.iTypeInst.m_imm);
+				return 0;
+			}
+		},
+		{
+			0b001100, // and immediate 'andi'
+			[&](UInstruction inst)
+			{
+				m_regArr[inst.iTypeInst.m_rt] = m_regArr[inst.iTypeInst.m_rs] & zero_extend(inst.iTypeInst.m_imm);
+				return 0;
+			}
+		},
+		{
+			0b001101, // or immediate 'ori'
+			[&](UInstruction inst)
+			{
+				m_regArr[inst.iTypeInst.m_rt] = m_regArr[inst.iTypeInst.m_rs] | zero_extend(inst.iTypeInst.m_imm);
+				return 0;
+			}
+		},
+		{
+			0b001110, // xor immediate 'xori'
+			[&](UInstruction inst)
+			{
+				m_regArr[inst.iTypeInst.m_rt] = m_regArr[inst.iTypeInst.m_rs] ^ zero_extend(inst.iTypeInst.m_imm);
+				return 0;
+			}
+		},
+		{
+			0b001111, // load upper immediate 'lui'
+			[&](UInstruction inst)
+			{
+				m_regArr[inst.iTypeInst.m_rt] = zero_extend(inst.iTypeInst.m_imm) << 16;
+				return 0;
+			}
+		},
+		{
+			0b001010, // set less than immediate 'slti'
+			[&](UInstruction inst)
+			{
+				m_regArr[inst.iTypeInst.m_rt] = ((i32)m_regArr[inst.iTypeInst.m_rs] < (i32)sign_extend(inst.iTypeInst.m_imm)) ? 1 : 0;
+				return 0;
+			}
+		},
+		{
+			0b001011, // set less than immediate unsigned 'sltiu'
+			[&](UInstruction inst)
+			{
+				m_regArr[inst.iTypeInst.m_rt] = ((u32)m_regArr[inst.iTypeInst.m_rs] < (u32)sign_extend(inst.iTypeInst.m_imm)) ? 1 : 0;
 				return 0;
 			}
 		},

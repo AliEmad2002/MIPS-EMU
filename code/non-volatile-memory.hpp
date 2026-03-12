@@ -30,10 +30,14 @@ public:
 
 	u32 operator [] (u32 address)
 	{
-		u32 readVal;
+		char readBuf[4];
 		m_binFile.clear();
 		m_binFile.seekg(address - 0x00400000);
-		m_binFile.read(reinterpret_cast<char*>(&readVal), 4);
+		m_binFile.read(readBuf, 4);
+		u32 readVal = readBuf[3];
+		readVal |= readBuf[2] << 8;
+		readVal |= readBuf[1] << 16;
+		readVal |= readBuf[0] << 24;
 		return readVal;
 	}
 
