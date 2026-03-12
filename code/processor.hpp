@@ -72,9 +72,9 @@ public:
 		m_regArr[REGISTER_PC] = 0x00400000;
 	}
 
-	i32 execute(CInstruction& instruction)
+	i32 execute(const CInstruction& instruction, std::array<u8, 4096>& ram)
 	{
-		i32 ret = m_isaMap.at(instruction.get().opEval.m_op)(instruction.get());
+		i32 ret = m_isaMap.at(instruction.get().opEval.m_op)(instruction.get(), ram);
 		static int i = 0;
 		std::cout << "executed " << i++ << "-th instruction" << std::endl;
 		return ret;
@@ -105,19 +105,155 @@ private:
 
 	std::array<u32, REGISTER_FILE_SIZE_IN_WORDS> m_regArr;
 	
-	const std::map< u8 /*op*/, std::function<i32(UInstruction)> > m_isaMap{
+	const std::map< u8 /*funct*/, std::function<i32(const UInstruction&, std::array<u8, 4096>&)> > m_rTypeInstructionsMap{
+		{
+			0b100000, // add signed with ovf trap 'add'
+			[&](UInstruction inst, std::array<u8, 4096>& ram)
+			{
+				m_regArr[inst.rTypeInst.m_rd] = (u32)((i32)m_regArr[inst.rTypeInst.m_rs] + (i32)m_regArr[inst.rTypeInst.m_rt]);
+				// todo: check ovf and update ovf trap accordingly
+				return 0;
+			}
+		},
+		{
+			0b100001, // add unsigned without ovf trap 'addu'
+			[&](UInstruction inst, std::array<u8, 4096>& ram)
+			{
+				m_regArr[inst.rTypeInst.m_rd] = m_regArr[inst.rTypeInst.m_rs] + m_regArr[inst.rTypeInst.m_rt];
+				return 0;
+			}
+		},
+		{
+			0b100010, // subtract signed with ovf trap 'sub'
+			[&](UInstruction inst, std::array<u8, 4096>& ram)
+			{
+				m_regArr[inst.rTypeInst.m_rd] = (u32)((i32)m_regArr[inst.rTypeInst.m_rs] - (i32)m_regArr[inst.rTypeInst.m_rt]);
+				// todo: check ovf and update ovf trap accordingly
+				return 0;
+			}
+		},
+		{
+			0b100011, // subtract unsigned without ovf trap 'subu'
+			[&](UInstruction inst, std::array<u8, 4096>& ram)
+			{
+				m_regArr[inst.rTypeInst.m_rd] = m_regArr[inst.rTypeInst.m_rs] - m_regArr[inst.rTypeInst.m_rt];
+				return 0;
+			}
+		},
+		{
+			0b100100, // and
+			[&](UInstruction inst, std::array<u8, 4096>& ram)
+			{
+				m_regArr[inst.rTypeInst.m_rd] = m_regArr[inst.rTypeInst.m_rs] & m_regArr[inst.rTypeInst.m_rt];
+				return 0;
+			}
+		},
+		{
+			0b100101, // or
+			[&](UInstruction inst, std::array<u8, 4096>& ram)
+			{
+				m_regArr[inst.rTypeInst.m_rd] = m_regArr[inst.rTypeInst.m_rs] | m_regArr[inst.rTypeInst.m_rt];
+				return 0;
+			}
+		},
+		{
+			0b100110, // xor
+			[&](UInstruction inst, std::array<u8, 4096>& ram)
+			{
+				m_regArr[inst.rTypeInst.m_rd] = m_regArr[inst.rTypeInst.m_rs] ^ m_regArr[inst.rTypeInst.m_rt];
+				return 0;
+			}
+		},
+		{
+			0b100111, // nor
+			[&](UInstruction inst, std::array<u8, 4096>& ram)
+			{
+				m_regArr[inst.rTypeInst.m_rd] = ~(m_regArr[inst.rTypeInst.m_rs] | m_regArr[inst.rTypeInst.m_rt]);
+				return 0;
+			}
+		},
+		{
+			0b000000, // shift left logical 'sll'
+			[&](UInstruction inst, std::array<u8, 4096>& ram)
+			{
+				m_regArr[inst.rTypeInst.m_rd] = (m_regArr[inst.rTypeInst.m_rt] << inst.rTypeInst.m_shamt);
+				return 0;
+			}
+		},
+		{
+			0b000010, // shift right logical 'srl'
+			[&](UInstruction inst, std::array<u8, 4096>& ram)
+			{
+				m_regArr[inst.rTypeInst.m_rd] = (m_regArr[inst.rTypeInst.m_rt] >> inst.rTypeInst.m_shamt);
+				return 0;
+			}
+		},
+		{
+			0b000011, // shift right arithmetic 'sra'
+			[&](UInstruction inst, std::array<u8, 4096>& ram)
+			{
+				i32 rt = (i32)m_regArr[inst.rTypeInst.m_rt];
+				if (rt < 0)
+				{
+					// todo: there's absloutly a better syntax here!
+					m_regArr[inst.rTypeInst.m_rd] = (u32)(-(i32)(((u32)(-rt)) >> inst.rTypeInst.m_shamt));
+				}
+				else
+				{
+					m_regArr[inst.rTypeInst.m_rd] = (((u32)(rt)) >> inst.rTypeInst.m_shamt);
+				}
+				return 0;
+			}
+		},
+		{
+			0b000100, // shift left logical by variable 'sllv'
+			[&](UInstruction inst, std::array<u8, 4096>& ram)
+			{
+				u32 shamt = m_regArr[inst.rTypeInst.m_rs] & 0b1111;
+				m_regArr[inst.rTypeInst.m_rd] = (m_regArr[inst.rTypeInst.m_rt] << shamt);
+				return 0;
+			}
+		},
+		{
+			0b000110, // shift right logical by variable 'srlv'
+			[&](UInstruction inst, std::array<u8, 4096>& ram)
+			{
+				u32 shamt = m_regArr[inst.rTypeInst.m_rs] & 0b1111;
+				m_regArr[inst.rTypeInst.m_rd] = (m_regArr[inst.rTypeInst.m_rt] >> shamt);
+				return 0;
+			}
+		},
+		{
+			0b000111, // shift right arithmetic by variable 'srav'
+			[&](UInstruction inst, std::array<u8, 4096>& ram)
+			{
+				u32 shamt = m_regArr[inst.rTypeInst.m_rs] & 0b1111;
+				i32 rt = (i32)m_regArr[inst.rTypeInst.m_rt];
+				if (rt < 0)
+				{
+					// todo: there's absloutly a better syntax here!
+					m_regArr[inst.rTypeInst.m_rd] = (u32)(-(i32)(((u32)(-rt)) >> shamt));
+				}
+				else
+				{
+					m_regArr[inst.rTypeInst.m_rd] = (((u32)(rt)) >> shamt);
+				}
+				return 0;
+			}
+		},
+	};
+
+	const std::map< u8 /*op*/, std::function<i32(const UInstruction&, std::array<u8, 4096>&)> > m_isaMap{
 		{
 			0,
-			[&](UInstruction inst)
+			[&](UInstruction inst, std::array<u8, 4096>& ram)
 			{
-				// R-type: todo
-				std::cout << "R-type instructions are not supported yet!" << std::endl;
-				return -1;
+				return m_rTypeInstructionsMap.at(inst.rTypeInst.m_funct)(inst, ram);
 			}
 		},
 		{
 			0b000010, // jump 'j'
-			[&](UInstruction inst)
+			[&](UInstruction inst, std::array<u8, 4096>& ram)
 			{
 				m_regArr[REGISTER_PC] = (m_regArr[REGISTER_PC] & (0b1111 << 28)) | ((u32)inst.jTypeInst.m_target << 2);
 				m_regArr[REGISTER_PC] -= sizeof(u32);
@@ -126,7 +262,7 @@ private:
 		},
 		{
 			0b000011, // jump and link 'jal'
-			[&](UInstruction inst)
+			[&](UInstruction inst, std::array<u8, 4096>& ram)
 			{
 				m_regArr[REGISTER_RA] = m_regArr[REGISTER_PC] + sizeof(u32);
 				m_regArr[REGISTER_PC] = inst.jTypeInst.m_target;
@@ -135,16 +271,16 @@ private:
 		},
 		{
 			0b001000, // add immediate with ovf trap 'addi'
-			[&](UInstruction inst)
+			[&](UInstruction inst, std::array<u8, 4096>& ram)
 			{
-				m_regArr[inst.iTypeInst.m_rt] = (i32)m_regArr[inst.iTypeInst.m_rs] + (i32)sign_extend(inst.iTypeInst.m_imm);
+				m_regArr[inst.iTypeInst.m_rt] = (u32)((i32)m_regArr[inst.iTypeInst.m_rs] + (i32)sign_extend(inst.iTypeInst.m_imm));
 				// todo: check ovf and update ovf trap accordingly
 				return 0;
 			}
 		},
 		{
 			0b001001, // add immediate unsigned without ovf trap 'addiu'
-			[&](UInstruction inst)
+			[&](UInstruction inst, std::array<u8, 4096>& ram)
 			{
 				m_regArr[inst.iTypeInst.m_rt] = m_regArr[inst.iTypeInst.m_rs] + sign_extend(inst.iTypeInst.m_imm);
 				return 0;
@@ -152,7 +288,7 @@ private:
 		},
 		{
 			0b001100, // and immediate 'andi'
-			[&](UInstruction inst)
+			[&](UInstruction inst, std::array<u8, 4096>& ram)
 			{
 				m_regArr[inst.iTypeInst.m_rt] = m_regArr[inst.iTypeInst.m_rs] & zero_extend(inst.iTypeInst.m_imm);
 				return 0;
@@ -160,7 +296,7 @@ private:
 		},
 		{
 			0b001101, // or immediate 'ori'
-			[&](UInstruction inst)
+			[&](UInstruction inst, std::array<u8, 4096>& ram)
 			{
 				m_regArr[inst.iTypeInst.m_rt] = m_regArr[inst.iTypeInst.m_rs] | zero_extend(inst.iTypeInst.m_imm);
 				return 0;
@@ -168,7 +304,7 @@ private:
 		},
 		{
 			0b001110, // xor immediate 'xori'
-			[&](UInstruction inst)
+			[&](UInstruction inst, std::array<u8, 4096>& ram)
 			{
 				m_regArr[inst.iTypeInst.m_rt] = m_regArr[inst.iTypeInst.m_rs] ^ zero_extend(inst.iTypeInst.m_imm);
 				return 0;
@@ -176,7 +312,7 @@ private:
 		},
 		{
 			0b001111, // load upper immediate 'lui'
-			[&](UInstruction inst)
+			[&](UInstruction inst, std::array<u8, 4096>& ram)
 			{
 				m_regArr[inst.iTypeInst.m_rt] = zero_extend(inst.iTypeInst.m_imm) << 16;
 				return 0;
@@ -184,7 +320,7 @@ private:
 		},
 		{
 			0b001010, // set less than immediate 'slti'
-			[&](UInstruction inst)
+			[&](UInstruction inst, std::array<u8, 4096>& ram)
 			{
 				m_regArr[inst.iTypeInst.m_rt] = ((i32)m_regArr[inst.iTypeInst.m_rs] < (i32)sign_extend(inst.iTypeInst.m_imm)) ? 1 : 0;
 				return 0;
@@ -192,11 +328,100 @@ private:
 		},
 		{
 			0b001011, // set less than immediate unsigned 'sltiu'
-			[&](UInstruction inst)
+			[&](UInstruction inst, std::array<u8, 4096>& ram)
 			{
 				m_regArr[inst.iTypeInst.m_rt] = ((u32)m_regArr[inst.iTypeInst.m_rs] < (u32)sign_extend(inst.iTypeInst.m_imm)) ? 1 : 0;
 				return 0;
 			}
 		},
+		{
+			0b000100, // branch if equal 'beq'
+			[&](UInstruction inst, std::array<u8, 4096>& ram)
+			{
+				if (m_regArr[inst.iTypeInst.m_rs] == m_regArr[inst.iTypeInst.m_rt])
+				{
+					m_regArr[REGISTER_PC] += (sign_extend(inst.iTypeInst.m_imm) << 2);
+					m_regArr[REGISTER_PC] -= sizeof(u32);
+				}
+				return 0;
+			}
+		},
+		{
+			0b000101, // branch if not equal 'bne'
+			[&](UInstruction inst, std::array<u8, 4096>& ram)
+			{
+				if (m_regArr[inst.iTypeInst.m_rs] != m_regArr[inst.iTypeInst.m_rt])
+				{
+					m_regArr[REGISTER_PC] += (sign_extend(inst.iTypeInst.m_imm) << 2);
+					m_regArr[REGISTER_PC] -= sizeof(u32);
+				}
+				return 0;
+			}
+		},
+		{
+			0b000110, // branch if less than or equal to zero 'blez'
+			[&](UInstruction inst, std::array<u8, 4096>& ram)
+			{
+				if ((i32)m_regArr[inst.iTypeInst.m_rs] <= 0)
+				{
+					m_regArr[REGISTER_PC] += (sign_extend(inst.iTypeInst.m_imm) << 2);
+					m_regArr[REGISTER_PC] -= sizeof(u32);
+				}
+				return 0;
+			}
+		},
+		{
+			0b000111, // branch if greater than zero 'bgtz'
+			[&](UInstruction inst, std::array<u8, 4096>& ram)
+			{
+				if ((i32)m_regArr[inst.iTypeInst.m_rs] > 0)
+				{
+					m_regArr[REGISTER_PC] += (sign_extend(inst.iTypeInst.m_imm) << 2);
+					m_regArr[REGISTER_PC] -= sizeof(u32);
+				}
+				return 0;
+			}
+		},
+		{
+			0b000001, // combination of branch instructions, specified by 'rt' value. todo: this is strange and lengthy and hence hart to maintain, find a better approach!
+			[&](UInstruction inst, std::array<u8, 4096>& ram)
+			{
+				if (inst.iTypeInst.m_rt == 0b00000)	// branch if less than zero 'bltz'
+				{
+					if ((i32)m_regArr[inst.iTypeInst.m_rs] < 0)
+					{
+						m_regArr[REGISTER_PC] += (sign_extend(inst.iTypeInst.m_imm) << 2);
+						m_regArr[REGISTER_PC] -= sizeof(u32);
+					}
+				}
+				else if (inst.iTypeInst.m_rt == 0b00001)	// branch if greater than or equal to zero 'bgez'
+				{
+					if ((i32)m_regArr[inst.iTypeInst.m_rs] >= 0)
+					{
+						m_regArr[REGISTER_PC] += (sign_extend(inst.iTypeInst.m_imm) << 2);
+						m_regArr[REGISTER_PC] -= sizeof(u32);
+					}
+				}
+				else if (inst.iTypeInst.m_rt == 0b10000)	// branch if less than zero and link 'bltzal'
+				{
+					if ((i32)m_regArr[inst.iTypeInst.m_rs] < 0)
+					{
+						m_regArr[REGISTER_RA] = m_regArr[REGISTER_PC] + sizeof(u32);
+						m_regArr[REGISTER_PC] += (sign_extend(inst.iTypeInst.m_imm) << 2);
+						m_regArr[REGISTER_PC] -= sizeof(u32);
+					}
+				}
+				else if (inst.iTypeInst.m_rt == 0b10001)	// branch if greater than or equal to zero and link 'bgezal'
+				{
+					if ((i32)m_regArr[inst.iTypeInst.m_rs] >= 0)
+					{
+						m_regArr[REGISTER_RA] = m_regArr[REGISTER_PC] + sizeof(u32);
+						m_regArr[REGISTER_PC] += (sign_extend(inst.iTypeInst.m_imm) << 2);
+						m_regArr[REGISTER_PC] -= sizeof(u32);
+					}
+				}
+				return 0;
+			}
+		},		
 	};
 };

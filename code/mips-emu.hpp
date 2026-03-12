@@ -44,7 +44,7 @@ public:
             }
 
             // execute the instruction
-            m_cpu.execute(instruction);
+            m_cpu.execute(instruction, m_ram);
             
             //  increment program count one word size (i.e.: one instruction size)
             m_cpu[REGISTER_PC] += sizeof(u32);
@@ -60,6 +60,6 @@ public:
 private:
 	CProcessor m_cpu;
 	CNonVolatileMemory m_nvm;
-	std::array<u32, 4096> m_ram;
+	std::array<u8, 4096> m_ram;
 	bool m_isDebugLoggingEnabled;
 };

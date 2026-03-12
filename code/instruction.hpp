@@ -58,7 +58,7 @@ public:
         m_inst.instructionWord = instructionWord;
     }
 
-    UInstruction get()
+    UInstruction get() const
     {
         return m_inst;
     }
