@@ -24,5 +24,5 @@ CProcessor::CProcessor()
 	m_regArr[REGISTER_PC] = 0x00400000;
 
 	/* Special startup value for stack pointer register (starts from end of RAM)	*/
-	m_regArr[REGISTER_SP] = uiRAM_SIZE_IN_BYTES-1;
+	m_regArr[REGISTER_SP] = uiRAM_SIZE_IN_BYTES - sizeof(u32);
 }
