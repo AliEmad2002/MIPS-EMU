@@ -110,7 +110,7 @@ private:
         {
             0b000000, // shift left logical 'sll'
             [&](const UInstruction& inst, CProcessor& cpu, TRam& ram)
-            {
+            { // notice that nop is executed by this function as well! $zero = $zero << 0.. that's a nop!
                 cpu[inst.rTypeInst.m_rd] = cpu[inst.rTypeInst.m_rt] << inst.rTypeInst.m_shamt;
                 return 0;
             }
