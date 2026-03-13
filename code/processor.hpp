@@ -385,8 +385,7 @@ private:
 		},
 		{
 			0b000011, // jump and link 'jal'
-			/*	$ra = address of instruction after the delay slot (PC+8 in real HW,
-			 *	but since we have no delay slot we use PC + sizeof(u32))	*/
+			// todo: here I ignored the delay slot, returning to a 'nop' and executing it is of no harm, right??
 			[&](UInstruction inst, std::array<u8, uiRAM_SIZE_IN_BYTES>& ram)
 			{
 				m_regArr[REGISTER_RA] = m_regArr[REGISTER_PC] + sizeof(u32);
