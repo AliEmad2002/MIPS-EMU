@@ -26,18 +26,19 @@ public:
 			{
 				std::cout << std::hex << m_binFile.get() << "\t" << std::flush;
 			}
+			std::cout << std::endl;
 		}
 
 	u32 operator [] (u32 address)
 	{
-		char readBuf[4];
+		u8 readBuf[4];
 		m_binFile.clear();
 		m_binFile.seekg(address - 0x00400000);
-		m_binFile.read(readBuf, 4);
+		m_binFile.read((char*)readBuf, 4);
 		u32 readVal = readBuf[3];
-		readVal |= readBuf[2] << 8;
-		readVal |= readBuf[1] << 16;
-		readVal |= readBuf[0] << 24;
+		readVal |= (u32)readBuf[2] << 8;
+		readVal |= (u32)readBuf[1] << 16;
+		readVal |= (u32)readBuf[0] << 24;
 		return readVal;
 	}
 
@@ -45,7 +46,7 @@ public:
 	{
 		for (const u32 r: regArr)
 		{
-			m_logFile << r << '\t';
+			m_logFile << "0x" << std::hex << r << '\t';
 		}
 		m_logFile << std::endl;
 	}

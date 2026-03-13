@@ -5,6 +5,7 @@
  *****************************************************************************/
 #include "types.hpp"
 #include <string>
+#include "configuration.hpp"
 #include "processor.hpp"
 #include "non-volatile-memory.hpp"
 #include "instruction.hpp"
@@ -40,7 +41,7 @@ public:
             // debugging print / log (if enabled)
             if (m_isDebugLoggingEnabled)
             {
-                // todo
+                std::cout << "executed instruction: " << std::hex << instructionWord << std::endl;
             }
 
             // execute the instruction
@@ -60,6 +61,6 @@ public:
 private:
 	CProcessor m_cpu;
 	CNonVolatileMemory m_nvm;
-	std::array<u8, 4096> m_ram;
+	std::array<u8, uiRAM_SIZE_IN_BYTES> m_ram;
 	bool m_isDebugLoggingEnabled;
 };
