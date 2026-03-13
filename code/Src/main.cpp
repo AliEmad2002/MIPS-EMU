@@ -1,6 +1,17 @@
 #include <iostream>
+#include <fstream>
+#include <cstdint>
 #include <string>
-#include "mips-emu.hpp"
+#include <array>
+#include <functional>
+#include <map>
+#include "configuration.hpp"
+#include "types.hpp"
+#include "instruction.hpp"
+#include "processor.hpp"
+#include "isa.hpp"
+#include "nvm.hpp"
+#include "emu.hpp"
 
 int main (int argc, char* argv[])
 {
@@ -10,7 +21,7 @@ int main (int argc, char* argv[])
     bool isDebugLoggingEnabled = true;//( (argc > 3) && (std::string(argv[3]) == "-v") );
 
     // intialize the emulator
-    CMipsEmulator emu(binFileName, logFileName, isDebugLoggingEnabled);
+    CEmulator emu(binFileName, logFileName, isDebugLoggingEnabled);
 
     // run and return error code
     return emu.run();

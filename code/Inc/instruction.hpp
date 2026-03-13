@@ -4,10 +4,6 @@
 /******************************************************************************
  * Dependancy Includes
  *****************************************************************************/
-#include <string>
-#include <vector>
-#include <variant>
-
 
 /******************************************************************************
  * Component's Class
@@ -50,7 +46,32 @@ class CInstruction{
 public:
     CInstruction(std::string asmLineStr)
     {
-        // todo: parse into "m_inst"
+        // std::stringstream ss(asmLineStr);
+
+        // /*  Get operation string (ex.: "add", "nor", ..etc)*/
+        // std::string operation;
+        // std::getline(ss, operation, ' ');
+
+        // /*  Get 'op' and 'funct' that co-relate to the operation    */
+
+        // /*  if 'op' expresses an R-type instruction */
+        // if (1)
+        // {
+        //     /*  Get values of 'rd', 'rt', 'rs'  */
+
+        // }
+        // /*  otherwise, if 'op' expresses an I-type instruction */
+        // else if (1)
+        // {
+        //     /*  Get values of 'rt', 'rs', 'imm'  */
+
+        // }
+        // /*  otherwise, if 'op' expresses a J-type instruction */
+        // else if (1)
+        // {
+        //     /*  Get value of 'target'  */
+
+        // }
     }
 
 	CInstruction(u32 instructionWord)

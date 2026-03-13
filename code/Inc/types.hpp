@@ -1,12 +1,6 @@
 #pragma once
 
 /******************************************************************************
- * Dependancy Includes
- *****************************************************************************/
-#include <cstdint>
-
-
-/******************************************************************************
  * Types Aliasing For Modern CPP Style
  *****************************************************************************/
 typedef int64_t i64;
@@ -17,3 +11,6 @@ typedef int16_t i16;
 typedef uint16_t u16;
 typedef int8_t i8;
 typedef uint8_t u8;
+
+
+typedef std::array<u8, uiRAM_SIZE_IN_BYTES> TRam;
