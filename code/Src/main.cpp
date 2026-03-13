@@ -11,6 +11,7 @@
 #include "processor.hpp"
 #include "isa.hpp"
 #include "nvm.hpp"
+#include "assembler.hpp"
 #include "emu.hpp"
 
 int main (int argc, char* argv[])
