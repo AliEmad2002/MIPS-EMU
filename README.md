@@ -34,11 +34,11 @@ Example code (Paste in test.c)
 ```c
 int sum(int n1, int n2);
 
-int main(int argc, char* argv[])
+int __start(int argc, char* argv[]) // using __start() instead of main() because we don't have startup code
 {
-        volatile int a = 15;
-        volatile int b = 3;
-        volatile int c = sum(a, b);
+        int a = 15;
+        int b = 3;
+        int c = sum(a, b);
         return 0;
 }
 
