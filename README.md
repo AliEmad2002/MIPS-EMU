@@ -56,7 +56,7 @@ Link this object file
 ```bash
 mips-linux-gnu-gcc -nostdlib test.o -o test.elf
 ```
-Dump the resultant object file into human readable format for reviewing
+Dump the resultant file into human readable format for reviewing
 ```bash
 mips-linux-gnu-objdump -d test.elf
 ```
