@@ -5,11 +5,11 @@
 #include <string>
 #include <array>
 #include <functional>
-#include <pair>
 #include <map>
 #include <cctype>
 #include "configuration.hpp"
 #include "types.hpp"
+#include "instruction.hpp"
 #include "assembler.hpp"
 
 CAssembler::CAssembler(std::string asmFileName):
@@ -47,9 +47,6 @@ m_asmFile(asmFileName)
         }
 
         /*  Otherwise, line should be an isntruction    */
-        /*  Get instruction's type and 'op'/'funct' value   */
-        auto [instructionType, opFunctVal] = instructionTypeOpFunctMap.at(line.substr(0, line.find(' ')));
-
 
         /*  Get binary word of this instruction using the instruction-ascii-to-bin map  */
 
