@@ -17,9 +17,9 @@
 int main (int argc, char* argv[])
 {
     // parse command line input (todo: add cmd error checking):
-    std::string binFileName = "test.bin";//std::string(argv[1]);
-    std::string logFileName = "log.txt";//std::string(argv[2]);
-    bool isDebugLoggingEnabled = true;//( (argc > 3) && (std::string(argv[3]) == "-v") );
+    std::string binFileName = std::string(argv[1]);
+    std::string logFileName = std::string(argv[2]);
+    bool isDebugLoggingEnabled = ( (argc > 3) && (std::string(argv[3]) == "-v") );
 
     // intialize the emulator
     CEmulator emu(binFileName, logFileName, isDebugLoggingEnabled);
