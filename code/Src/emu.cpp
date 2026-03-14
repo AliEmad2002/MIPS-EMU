@@ -3,7 +3,6 @@
  *****************************************************************************/
 #include <iostream>
 #include <fstream>
-#include <cstdint>
 #include <string>
 #include <array>
 #include <functional>
@@ -33,7 +32,7 @@ i32 CEmulator::run()
         // debugging print / log (if enabled)
         if (m_isDebugLoggingEnabled)
         {
-            std::cout << "executed instruction: " << std::hex << instructionWord << std::endl;
+            std::cout << "executing instruction: " << std::hex << instructionWord << std::endl;
         }
 
         // execute the instruction

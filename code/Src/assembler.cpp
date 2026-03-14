@@ -1,7 +1,6 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
-#include <cstdint>
 #include <string>
 #include <array>
 #include <functional>

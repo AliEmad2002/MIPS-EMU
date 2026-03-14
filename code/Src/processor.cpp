@@ -21,7 +21,7 @@ CProcessor::CProcessor()
 	m_regArr.fill(0);
 
 	/* Special startup value for program count register	*/
-	m_regArr[REGISTER_PC] = 0x00400000;
+	m_regArr[REGISTER_PC] = 0x00400130;
 
 	/* Special startup value for stack pointer register (starts from end of RAM)	*/
 	m_regArr[REGISTER_SP] = uiRAM_SIZE_IN_BYTES - sizeof(u32);

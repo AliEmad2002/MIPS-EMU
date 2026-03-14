@@ -292,7 +292,7 @@ private:
             [&](const UInstruction& inst, CProcessor& cpu, TRam& ram)
             {
                 cpu[REGISTER_PC] = (cpu[REGISTER_PC] & (0b1111 << 28)) | ((u32)inst.jTypeInst.m_target << 2);
-                // cpu[REGISTER_PC] -= sizeof(u32);
+                cpu[REGISTER_PC] -= sizeof(u32);
                 return 0;
             }
         },
@@ -303,7 +303,7 @@ private:
             {
                 cpu[REGISTER_RA] = cpu[REGISTER_PC] + sizeof(u32);
                 cpu[REGISTER_PC] = (cpu[REGISTER_PC] & (0b1111 << 28)) | ((u32)inst.jTypeInst.m_target << 2);
-                // cpu[REGISTER_PC] -= sizeof(u32);
+                cpu[REGISTER_PC] -= sizeof(u32);
                 return 0;
             }
         },
@@ -502,8 +502,8 @@ private:
             {
                 if (cpu[inst.iTypeInst.m_rs] == cpu[inst.iTypeInst.m_rt])
                 {
-                    cpu[REGISTER_PC] += (sign_extend(inst.iTypeInst.m_imm) << 2);
-                    // cpu[REGISTER_PC] -= sizeof(u32);
+                    cpu[REGISTER_PC] += (sign_extend(inst.iTypeInst.m_imm) << 2) + sizeof(u32);
+                    cpu[REGISTER_PC] -= sizeof(u32);
                 }
                 return 0;
             }
@@ -514,8 +514,8 @@ private:
             {
                 if (cpu[inst.iTypeInst.m_rs] != cpu[inst.iTypeInst.m_rt])
                 {
-                    cpu[REGISTER_PC] += (sign_extend(inst.iTypeInst.m_imm) << 2);
-                    // cpu[REGISTER_PC] -= sizeof(u32);
+                    cpu[REGISTER_PC] += (sign_extend(inst.iTypeInst.m_imm) << 2) + sizeof(u32);
+                    cpu[REGISTER_PC] -= sizeof(u32);
                 }
                 return 0;
             }
@@ -526,8 +526,8 @@ private:
             {
                 if ((i32)cpu[inst.iTypeInst.m_rs] <= 0)
                 {
-                    cpu[REGISTER_PC] += (sign_extend(inst.iTypeInst.m_imm) << 2);
-                    // cpu[REGISTER_PC] -= sizeof(u32);
+                    cpu[REGISTER_PC] += (sign_extend(inst.iTypeInst.m_imm) << 2) + sizeof(u32);
+                    cpu[REGISTER_PC] -= sizeof(u32);
                 }
                 return 0;
             }
@@ -538,8 +538,8 @@ private:
             {
                 if ((i32)cpu[inst.iTypeInst.m_rs] > 0)
                 {
-                    cpu[REGISTER_PC] += (sign_extend(inst.iTypeInst.m_imm) << 2);
-                    // cpu[REGISTER_PC] -= sizeof(u32);
+                    cpu[REGISTER_PC] += (sign_extend(inst.iTypeInst.m_imm) << 2) + sizeof(u32);
+                    cpu[REGISTER_PC] -= sizeof(u32);
                 }
                 return 0;
             }
@@ -552,16 +552,16 @@ private:
                 {
                     if ((i32)cpu[inst.iTypeInst.m_rs] < 0)
                     {
-                        cpu[REGISTER_PC] += (sign_extend(inst.iTypeInst.m_imm) << 2);
-                        // cpu[REGISTER_PC] -= sizeof(u32);
+                        cpu[REGISTER_PC] += (sign_extend(inst.iTypeInst.m_imm) << 2) + sizeof(u32);
+                        cpu[REGISTER_PC] -= sizeof(u32);
                     }
                 }
                 else if (inst.iTypeInst.m_rt == 0b00001)	// branch if greater than or equal to zero 'bgez'
                 {
                     if ((i32)cpu[inst.iTypeInst.m_rs] >= 0)
                     {
-                        cpu[REGISTER_PC] += (sign_extend(inst.iTypeInst.m_imm) << 2);
-                        // cpu[REGISTER_PC] -= sizeof(u32);
+                        cpu[REGISTER_PC] += (sign_extend(inst.iTypeInst.m_imm) << 2) + sizeof(u32);
+                        cpu[REGISTER_PC] -= sizeof(u32);
                     }
                 }
                 else if (inst.iTypeInst.m_rt == 0b10000)	// branch if less than zero and link 'bltzal'
@@ -569,8 +569,8 @@ private:
                     if ((i32)cpu[inst.iTypeInst.m_rs] < 0)
                     {
                         cpu[REGISTER_RA] = cpu[REGISTER_PC] + sizeof(u32);
-                        cpu[REGISTER_PC] += (sign_extend(inst.iTypeInst.m_imm) << 2);
-                        // cpu[REGISTER_PC] -= sizeof(u32);
+                        cpu[REGISTER_PC] += (sign_extend(inst.iTypeInst.m_imm) << 2) + sizeof(u32);
+                        cpu[REGISTER_PC] -= sizeof(u32);
                     }
                 }
                 else if (inst.iTypeInst.m_rt == 0b10001)	// branch if greater than or equal to zero and link 'bgezal'
@@ -578,8 +578,8 @@ private:
                     if ((i32)cpu[inst.iTypeInst.m_rs] >= 0)
                     {
                         cpu[REGISTER_RA] = cpu[REGISTER_PC] + sizeof(u32);
-                        cpu[REGISTER_PC] += (sign_extend(inst.iTypeInst.m_imm) << 2);
-                        // cpu[REGISTER_PC] -= sizeof(u32);
+                        cpu[REGISTER_PC] += (sign_extend(inst.iTypeInst.m_imm) << 2) + sizeof(u32);
+                        cpu[REGISTER_PC] -= sizeof(u32);
                     }
                 }
                 return 0;
