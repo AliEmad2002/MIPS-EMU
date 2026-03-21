@@ -26,3 +26,17 @@ CProcessor::CProcessor()
 	/* Special startup value for stack pointer register (starts from end of RAM)	*/
 	m_regArr[REGISTER_SP] = uiRAM_SIZE_IN_BYTES - sizeof(u32);
 }
+
+u32& CProcessor::operator [] (u32 registerIndex)
+{
+	// ignore writes on the "$zero" register:
+	if (registerIndex == REGISTER_ZERO)
+	{
+		static u32 dummyReg;
+		dummyReg = 0;
+		return dummyReg;
+	}
+
+	// otherwise, return the requested register
+	return m_regArr[registerIndex];
+}

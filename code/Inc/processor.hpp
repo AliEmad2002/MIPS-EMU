@@ -44,7 +44,7 @@ enum ERegister{
 	REGISTER_HI = 33,
 	REGISTER_LO = 34,
 
-	/*	TODO: Coprocessor 0 (CP0) — Privileged / Exception Handling Registers*/
+	/*	TODO: Coprocessor 0 (CP0) — Privileged / Exception Handling Registers	*/
 
 	/*	Size of the register file (In words)	*/
 	REGISTER_FILE_SIZE_IN_WORDS,
@@ -56,7 +56,7 @@ class CProcessor{
 public:
 	CProcessor();
 
-	u32& operator [] (u32 registerIndex)	{	return m_regArr[registerIndex];	}
+	u32& operator [] (u32 registerIndex);
 
 	TRegArr& getRegisterArray()	{	return m_regArr;	}
 
